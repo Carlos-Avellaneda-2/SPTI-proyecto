@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.env
+results/
+logs/
+.streamlit/secrets.toml
+
+# Resultados de pruebas reales con Ollama (locales)
+resultados_ollama.txt
+prueba_postman.txt

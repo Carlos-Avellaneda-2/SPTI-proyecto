@@ -1,0 +1,10 @@
+[project]
+name = "spti-llm-eval"
+version = "1.0.0"
+description = "Evaluación automatizada y diferencial de seguridad de LLM (Unsecure vs. Secure) — SPTI-01, ECI"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"

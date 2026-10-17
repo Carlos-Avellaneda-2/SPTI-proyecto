@@ -1,0 +1,56 @@
+# Entorno aislado de laboratorio: las dos arquitecturas + el dashboard.
+#   docker compose up --build                 -> levanta unsecure (8001), secure (8002) y dashboard (8501)
+#   docker compose run --rm evaluator         -> ataca ambas APIs por HTTP y guarda resultados en ./results
+services:
+  unsecure:
+    build: .
+    environment:
+      ARCHITECTURE: unsecure
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # OLLAMA_URL del .env apunta a localhost del host; dentro del contenedor no sirve
+      OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+      LLM_TIMEOUT_S: ${LLM_TIMEOUT_S:-60}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-600}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["8001:8000"]
+    networks: [lab]
+
+  secure:
+    build: .
+    environment:
+      ARCHITECTURE: secure
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # OLLAMA_URL del .env apunta a localhost del host; dentro del contenedor no sirve
+      OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+      LLM_TIMEOUT_S: ${LLM_TIMEOUT_S:-60}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-600}
+    volumes: ["./logs:/app/logs"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["8002:8000"]
+    networks: [lab]
+
+  dashboard:
+    build: .
+    command: ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    volumes: ["./results:/app/results"]
+    ports: ["8501:8501"]
+    networks: [lab]
+
+  evaluator:
+    build: .
+    profiles: ["eval"]
+    command: ["python", "-m", "evaluator", "--target", "http",
+              "--unsecure-url", "http://unsecure:8000", "--secure-url", "http://secure:8000"]
+    volumes: ["./results:/app/results"]
+    depends_on: [unsecure, secure]
+    networks: [lab]
+
+networks:
+  lab:
+    driver: bridge

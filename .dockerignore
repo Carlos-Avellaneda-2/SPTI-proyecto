@@ -1,0 +1,12 @@
+# No copiar secretos ni artefactos locales a la imagen
+.env
+.venv/
+venv/
+.git/
+results/
+logs/
+__pycache__/
+*.pyc
+.pytest_cache/
+resultados_ollama.txt
+prueba_postman.txt
